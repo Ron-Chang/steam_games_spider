@@ -91,11 +91,10 @@ file.close()
 print("-"*80)
 
 print("Directory: '{}/stream_scrape.csv'".format(getcwd()))
-file_reveal = input("Reveal the file's Directory? (y/n)")
+file_reveal = input("Reveal the file's Directory(y/n)? ")
 
 if file_reveal in ["y","yes","Y","YES","Yes"]:
-    chdir("..")
-    targetDirectory = "data"
+    targetDirectory = getcwd()
     call(["open", targetDirectory])
 else:
-    quit("Terminated!")
+    quit("Function is Terminated!")
