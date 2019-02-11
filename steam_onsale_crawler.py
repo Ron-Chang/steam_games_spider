@@ -42,7 +42,7 @@ for page in range(1,pages+1):
 
     # grabs each product
     containers = page_soup.findAll("a",
-        {"class":"search_result_row ds_collapse_flag"})
+        {"class":"search_result_row ds_collapse_flag  app_impression_tracked"})
 
     for container in containers:
         name = container.span.string.replace(",","_")
@@ -95,6 +95,9 @@ file_reveal = input("Reveal the file's Directory(y/n)? ")
 
 if file_reveal in ["y","yes","Y","YES","Yes"]:
     targetDirectory = getcwd()
-    call(["open", targetDirectory])
+    try:
+        call(["open", targetDirectory])
+    except:
+        call(["xdg-open", targetDirectory])
 else:
     quit("Function is Terminated!")
