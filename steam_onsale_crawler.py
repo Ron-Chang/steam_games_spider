@@ -42,7 +42,7 @@ for page in range(1,pages+1):
 
     # grabs each product
     containers = page_soup.findAll("a",
-        {"class":"search_result_row ds_collapse_flag  app_impression_tracked"})
+        {"class":"search_result_row ds_collapse_flag"})
 
     for container in containers:
         name = container.span.string.replace(",","_")
