@@ -2,9 +2,9 @@
 import time
 import requests
 # submodule
-from scraping-tools.super_print import SuperPrint
+from scraping_tools.super_print import SuperPrint
 # project
-from core.const import OS
+from core.steam_const import OS
 
 class SteamAPI:
 
@@ -50,8 +50,9 @@ class SteamAPI:
             url  = f'{url}&os={os}'
         if is_on_sale is True:
             url  = f'{url}&specials=1'
+
+        SuperPrint(url, target_name='url')
         return cls._request_get(url=url)
 
-if __name__ == '__main__':
-    test = SteamAPI.get_games_inventory(page=1)
+
 
