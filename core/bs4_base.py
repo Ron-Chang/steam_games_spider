@@ -2,4 +2,4 @@ from bs4 import BeautifulSoup
 
 class BeautifulSoupBase:
 
-    print('BeautifulSoupBase')
+    print('BeautifulSoup4 Import Succeed!')

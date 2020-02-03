@@ -9,11 +9,13 @@ from core.steam_api import SteamAPI
 from core.bs4_base import BeautifulSoupBase
 from core.steam_const import OS
 
+
 class SteamSpiderHandler:
-    pass
+    print('BeautifulSoupBase Import Succeed!')
 
 
 class SteamSpiderExcutor:
 
     def run(is_on_sale=False, os=None):
         SteamAPI.get_games_inventory(page=1, is_on_sale=is_on_sale, os=os)
+        print('SteamSpiderHandler Import Succeed!')
