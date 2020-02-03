@@ -4,7 +4,7 @@ import requests
 # submodule
 from scraping_tools.super_print import SuperPrint
 # project
-from core.steam_const import OS
+from core.steam_const import OS, STEAM
 
 class SteamAPI:
 
@@ -44,13 +44,12 @@ class SteamAPI:
                 Default is None
                 available input = ['win', 'mac', 'linux']
         """
-        url = f'https://store.steampowered.com/search/?page={page}'
-        os_list = [value for key, value in OS.__dict__.items() if not key.startswith('_')]
-        if os and os in os_list:
-            url  = f'{url}&os={os}'
+        parameter = str()
+        if os and os in [value for key, value in OS.__dict__.items() if not key.startswith('_')]:
+            parameter  = f'{parameter}&os={os}'
         if is_on_sale is True:
-            url  = f'{url}&specials=1'
-
+            parameter  = f'{parameter}&specials=1'
+        url = f'{STEAM.DOMAIN}?page={page}{parameter}'
         SuperPrint(url, target_name='url')
         return cls._request_get(url=url)
 
