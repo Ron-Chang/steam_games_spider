@@ -1,4 +1,4 @@
-# Steam [on sale game] Crawler  
+# Steam Games Spider
 
 ### AIM TO:
   Get all steam games info insert to the database or update database if the game is existed, forward the on sale games which in the users whishlist as a email to the user.
