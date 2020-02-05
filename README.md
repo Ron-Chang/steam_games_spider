@@ -6,3 +6,5 @@
 + Available options
   + on sale ( True / False)
   + platform ( windows, macOS, linux)
+
+fetch to HackMD
