@@ -16,11 +16,6 @@ class BSoupHandler:
         return soup.find('a').get('href')
 
     @staticmethod
-    def find_all_href(soup):
-        items = soup.find_all('a')
-        return [item.get('href') for item in items]
-
-    @staticmethod
     def find_class(soup, class_name):
         return soup.find(class_=class_name)
 
@@ -45,16 +40,21 @@ class BSoupHandler:
         return soup.find(tag, {key: value})
 
     @staticmethod
+    def find_all_tag_by_key_value(soup, tag, key, value):
+        """find <div> tag and <class> value is "body"
+                <div class="body" itemprop="articleBody">   string </div>
+                <tag key=value itemprop="articleBody">      string </tag>
+        """
+        return soup.find_all(tag, {key: value})
+
+    @staticmethod
     def get_value_by_key(soup, key_name):
         return soup.get(key_name)
 
     @staticmethod
     def get_text(soup):
-        try:
-            return soup.get_text()
-        except Exception as e:
-            print(e)
-            return ''
+        string = None if soup is None else soup.get_text()
+        return None if string is None else string.strip()
 
     @staticmethod
     def print(soup):
