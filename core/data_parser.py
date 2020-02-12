@@ -3,9 +3,9 @@ import re
 
 class DataParser:
 
-    REGEX_BUNDLE_IMG_TOKEN = re.compile(r'.*\/\d+\/(.*)\/capsule.*')
-    REGEX_OF_USERS_REVIEW = re.compile(r'.*<br>(\d+%)\ of\ the\ ([0-9,]+)\ user.*')
-    REGEX_OF_RESULTS_AMOUNT = re.compile(r'.*of\ (\d+)')
+    BUNDLE_IMG_TOKEN_REGEX = re.compile(r'.*\/\d+\/(.*)\/capsule.*')
+    USERS_REVIEW_REGEX = re.compile(r'.*<br>(\d+%)\ of\ the\ ([0-9,]+)\ user.*')
+    RESULTS_AMOUNT_REGEX = re.compile(r'.*of\ (\d+)')
 
     @classmethod
     def get_bundle_img_token(cls, input_string):
@@ -15,7 +15,7 @@ class DataParser:
                 '/capsule_sm_120.jpg?t=1581020525')
             get: '1c3buxrordl3klbz'
         """
-        token = cls.REGEX_BUNDLE_IMG_TOKEN.search(input_string)
+        token = cls.BUNDLE_IMG_TOKEN_REGEX.search(input_string)
         return token.group(1) if token else None
 
     @classmethod
@@ -24,7 +24,7 @@ class DataParser:
         parse: ('showing 1 - 25 of 2356')
         get: '2356'
         """
-        result = cls.REGEX_OF_RESULTS_AMOUNT.search(input_string)
+        result = cls.RESULTS_AMOUNT_REGEX.search(input_string)
         return result.group(1) if result else None
 
     @classmethod
@@ -35,7 +35,7 @@ class DataParser:
             get: 77%
             get: 638,504
         """
-        result = cls.REGEX_OF_USERS_REVIEW.search(input_string)
+        result = cls.USERS_REVIEW_REGEX.search(input_string)
         if not result:
             return None
         review_info = {

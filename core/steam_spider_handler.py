@@ -1,4 +1,5 @@
 # built-in
+import ast
 import time
 import threading
 # submodule
@@ -9,17 +10,19 @@ from scraping_tools.snap_timer import SnapTimer
 from core.steam_api import SteamAPI
 from core.beautiful_soup_handler import BSoupHandler
 from core.steam_const import OS
-from core.target_handler import TargetHandler
-from urllib import parse
+from core.target_extractor import TargetExtractor
 
 
 class SteamSpiderHandler:
 
-    def __init__(self, is_on_sale, platform):
+    def __init__(self, is_on_sale, platform, filepath, countrol_number):
         self.is_on_sale = is_on_sale
         self.platform = platform
+        self.filepath = filepath
+        self.countrol_number = countrol_number
+        self.info_container = dict()
 
-    ############## START: static method ##############
+        self.run()
 
     @staticmethod
     def _load_page(page, is_on_sale, platform):
@@ -29,14 +32,6 @@ class SteamSpiderHandler:
         response = SteamAPI.get_games_inventory(
             page=page, is_on_sale=is_on_sale, platform=platform)
         return BSoupHandler.load_by_response(response=response)
-
-    # @staticmethod
-    # def _is_empty_page(search_result_container):
-    #     text = BSoupHandler.get_text(soup=search_result_container)
-    #     text_parsed = search_result_text.strip()
-    #     if 'No results were returned for that query.' == text_parsed:
-    #         return True
-    #     return False
 
     @staticmethod
     def _get_results_by_page(page_soup):
@@ -50,10 +45,6 @@ class SteamSpiderHandler:
             soup=search_result_container,
             class_name='search_result_row ds_collapse_flag')
         return search_results
-
-
-    ############## END: static method ##############
-    ############## START: collect targets and pages number ##############
 
     @staticmethod
     def _get_pagination_container(page_soup):
@@ -80,7 +71,7 @@ class SteamSpiderHandler:
         SuperPrint(result_amount, 'result_amount')
         return result_amount
 
-    def get_search_pages_amount(self, page_soup):
+    def _get_search_pages_amount(self, page_soup):
         """
             <a class="pagebtn" href="a_link"> < </a>
             <a href="a_link"> 2 </a>
@@ -97,58 +88,57 @@ class SteamSpiderHandler:
         SuperPrint(page_amount, 'page_amount')
         return page_amount
 
-    ############## END: collect targets and pages number ##############
+    def _slice_pages(self, last_page_number):
+        all_pages_sliced = list()
+        temp = list()
+        for page in range(1, last_page_number+1):
+            temp.append(page)
+            if page % self.countrol_number == 0:
+                pages = temp.copy()
+                all_pages_sliced.append(pages)
+                temp.clear()
+        all_pages_sliced.append(pages)
+        return all_pages_sliced
 
-
-    # @staticmethod
-    # def _get_response(page, is_on_sale, os):
-    #     response = SteamAPI.get_games_inventory(
-    #         page=page, is_on_sale=is_on_sale, os=os)
-    #     return response
-
-    # @staticmethod
-    # def _get_search_result_container(response):
-    #     soup = BSoupHandler.load_by_response(response)
-    #     search_result_container = BSoupHandler.find_tag_by_key_value(
-    #         soup=soup,
-    #         tag='div',
-    #         key='id',
-    #         value='search_result_container'
-    #     )
-    #     return search_result_container
-
-    # @staticmethod
-    # def _get_response(page, is_on_sale, os):
-    #     response = SteamAPI.get_games_inventory(
-    #         page=page, is_on_sale=is_on_sale, os=os)
-    #     response_soup = BSoupHandler.load_by_response(response=response)
-    #     return response_soup
-
-    # @classmethod
-    # def _exec(cls, search_result, container):
-    #     target_info = TargetHandler.get_target_info(search_result)
-    #     SuperPrint(target_info, 'target_info')
+    @classmethod
+    def _exec(cls, page, is_on_sale, platform, filepath, info_container):
+        page_soup = cls._load_page(page, is_on_sale, platform)
+        targets = cls._get_results_by_page(page_soup)
+        for target in targets:
+            info = TargetExtractor(target, filepath).get_info()
+            if not info:
+                continue
+            target_id = info.get('id')
+            info_container.update({target_id: info})
 
     def run(self):
-        page = 1
-        page_soup = self._load_page(page, self.is_on_sale, self.platform)
-        pages_amount = self.get_search_pages_amount(page_soup)
-        targets = self._get_results_by_page(page_soup)
-        for target in targets:
-            info = TargetHandler(target, 'img').get_target_info()
-            print(info)
-        # container = list()
-        # while True:
-        #     response = cls._get_response(page=page, is_on_sale=is_on_sale, os=os)
-        #     search_result = cls._get_search_result_container(response)
-        #     if cls._is_empty_page(search_result=search_result):
-        #         SuperPrint(f'"Page.{page}" is the last page of the query.')
-        #         break
-        #     cls._exec(search_result=search_result, container=container)
-        #     page += 1
-
+        first_page = 1
+        first_page_soup = self._load_page(first_page, self.is_on_sale, self.platform)
+        pages_amount = self._get_search_pages_amount(first_page_soup)
+        if pages_amount.isdigit():
+            last_page_number = ast.literal_eval(pages_amount)
+        else:
+            raise('Cannot find last page number')
+        all_pages_sliced = self._slice_pages(last_page_number)
+        for pages_sliced in all_pages_sliced:
+            threads = list()
+            for page in pages_sliced:
+                thr = threading.Thread(
+                    target=self._exec,
+                    args=(
+                        page,
+                        self.is_on_sale, self.platform,
+                        self.filepath, self.info_container
+                    )
+                )
+                thr.start()
+                threads.append(thr)
+            for thr in threads:
+                thr.join(10)
+        result = self.info_container
+        print(result)
 
 class SteamSpiderExcutor:
 
-    def run(is_on_sale=False, platform=None):
-        SteamSpiderHandler(is_on_sale=is_on_sale, platform=platform).run()
+    def run(**kwargs):
+        SteamSpiderHandler(**kwargs)

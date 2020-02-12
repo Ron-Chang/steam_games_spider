@@ -17,7 +17,7 @@ class ImageHandler:
         return f'steam_{category}_{target_id}_{target_type}.jpg'
 
     @staticmethod
-    def _get_capsule(target_id, is_bundle, token, path):
+    def _get_capsule(target_id, is_bundle, token):
         image_bytes = SteamAPI.get_target_capsule(
             target_id, is_bundle, token)
         if image_bytes is None:
@@ -26,7 +26,7 @@ class ImageHandler:
         return Image.open(image_content)
 
     @staticmethod
-    def _get_header(target_id, is_bundle, token, path):
+    def _get_header(target_id, is_bundle, token):
         image_bytes = SteamAPI.get_target_header(
             target_id, is_bundle, token)
         if image_bytes is None:
@@ -35,14 +35,14 @@ class ImageHandler:
         return Image.open(image_content)
 
     @classmethod
-    def download_image(cls, target_id, is_bundle, token, path):
-        capsule = cls._get_capsule(target_id, is_bundle, token, path)
-        header = cls._get_header(target_id, is_bundle, token, path)
+    def download_image(cls, target_id, is_bundle, token, filepath):
+        capsule = cls._get_capsule(target_id, is_bundle, token)
+        header = cls._get_header(target_id, is_bundle, token)
         if capsule:
             filename = cls._get_filename(target_id, is_bundle, 'capsule')
-            filepath = os.path.join(path, filename)
-            capsule.save(filepath)
+            file_directory = os.path.join(filepath, filename)
+            capsule.save(file_directory)
         if header:
             filename = cls._get_filename(target_id, is_bundle, 'header')
-            filepath = os.path.join(path, filename)
-            header.save(filepath)
+            file_directory = os.path.join(filepath, filename)
+            header.save(file_directory)

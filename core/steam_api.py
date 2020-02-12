@@ -30,7 +30,7 @@ class SteamAPI:
                 response.encoding = 'utf8'
                 break
             except Exception as e:
-                print(f'[LOG       ]| <function: {cls._request_get_html.__name__}> {e}')
+                # print(f'[LOG       ]| <function: {cls._request_get_html.__name__}> {e}')
                 error_count += 1
                 if error_count > 100:
                     return None
@@ -50,7 +50,7 @@ class SteamAPI:
                 response.encoding = 'utf8'
                 break
             except Exception as e:
-                print(f'[LOG       ]| <function: {cls._request_get_stream.__name__}> {e}')
+                # print(f'[LOG       ]| <function: {cls._request_get_stream.__name__}> {e}')
                 error_count += 1
                 if error_count > 100:
                     return None
@@ -76,7 +76,7 @@ class SteamAPI:
         if is_on_sale is True:
             parameter  = f'{parameter}&specials=1'
         url = f'{STEAM.SEARCH_DOMAIN}/search/?page={page}{parameter}'
-        SuperPrint(url, target_name='url')
+        # SuperPrint(url, target_name='url')
         return cls._request_get_html(url=url)
 
     @classmethod

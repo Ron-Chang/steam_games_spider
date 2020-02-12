@@ -15,13 +15,13 @@ class OS:
     LINUX = 'linux'
 
 
-class HTML:
+# class HTML:
 
-    DECODE = {
-        "&amp;": "&",
-        "&quot;": '"',
-        "&apos;": "'",
-        "&gt;": ">",
-        "&lt;": "<",
-    }
+#     DECODE = {
+#         "&amp;": "&",
+#         "&quot;": '"',
+#         "&apos;": "'",
+#         "&gt;": ">",
+#         "&lt;": "<",
+#     }
 
