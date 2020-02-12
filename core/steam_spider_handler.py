@@ -1,10 +1,12 @@
 # built-in
 import ast
+import time
 import threading
 # submodule
 from scraping_tools.super_print import SuperPrint
 from scraping_tools.progress_bar import ProgressBar
 from scraping_tools.snap_timer import SnapTimer
+from scraping_tools.utils import CommonUtils
 # project
 from core.steam_api import SteamAPI
 from core.data_parser import DataParser
@@ -20,6 +22,8 @@ class SteamSpiderHandler:
         self.filepath = filepath
         self.control_number = control_number
         self.info_container = dict()
+        self.count = int()
+        self.results_number = int()
 
         self.run()
 
@@ -55,7 +59,7 @@ class SteamSpiderHandler:
             value='search_pagination')
         return search_pagination
 
-    def get_search_results_amount(self, page_soup):
+    def _get_search_results_amount(self, page_soup):
         """
             <div class="search_pagination_left">
                 showing 1 - 25 of 2356
@@ -66,9 +70,7 @@ class SteamSpiderHandler:
             soup=search_pagination, tag='div', key='class',
             value='search_pagination_left')
         amount_string = BSoupHandler.get_text(soup=amount_container)
-        result_amount = DataParser.get_results_amount(amount_string) if amount_string else None
-        SuperPrint(result_amount, 'result_amount')
-        return result_amount
+        return DataParser.get_results_amount(amount_string) if amount_string else None
 
     def _get_search_pages_amount(self, page_soup):
         """
@@ -84,7 +86,6 @@ class SteamSpiderHandler:
             soup=search_pagination, tag_name='a')
         pagination_soup = pagination_list[-2] if pagination_list else None
         page_amount = BSoupHandler.get_text(soup=pagination_soup)
-        SuperPrint(page_amount, 'page_amount')
         return page_amount
 
     def _slice_pages(self, last_page_number):
@@ -105,7 +106,9 @@ class SteamSpiderHandler:
         page_soup = self._load_page(page, self.is_on_sale, self.platform)
         targets = self._get_results_by_page(page_soup)
         for target in targets:
-            info = TargetExtractor(target, self.filepath).get_info()
+            info = TargetExtractor(target, self.filepath).get()
+            self.count += 1
+            ProgressBar(count=self.count, amount=self.results_number)
             if not info:
                 continue
             target_id = info.get('id')
@@ -115,10 +118,14 @@ class SteamSpiderHandler:
         first_page = 1
         first_page_soup = self._load_page(first_page, self.is_on_sale, self.platform)
         pages_amount = self._get_search_pages_amount(first_page_soup)
-        if pages_amount.isdigit():
+        SuperPrint(pages_amount, '[INFO      ]| pages_amount')
+        results_amount = self._get_search_results_amount(first_page_soup)
+        if pages_amount.isdigit() and results_amount.isdigit():
             last_page_number = ast.literal_eval(pages_amount)
+            self.results_number = ast.literal_eval(results_amount)
         else:
             raise(Exception('Cannot find last page number'))
+
         all_pages_sliced = self._slice_pages(last_page_number)
         for pages_sliced in all_pages_sliced:
             threads = list()
@@ -128,12 +135,22 @@ class SteamSpiderHandler:
                 threads.append(thr)
             for thr in threads:
                 thr.join(10)
-        result = self.info_container
-        print(result)
+        results = self.info_container
+        # ################### TEST ####################
+        with open('export.txt', 'w') as fw:
+            fw.write('[\n')
+            for result in results.values():
+                fw.write(f'{str(result)},\n')
+            fw.write('\n]')
+        # ################### TEST ####################
 
 
 class SteamSpiderExecutor:
 
     @staticmethod
-    def run(**kwargs):
-        SteamSpiderHandler(**kwargs)
+    @CommonUtils.snap_interval(hours=36)
+    def run(snap_interval, **kwargs):
+        while True:
+            start = time.time()
+            SteamSpiderHandler(**kwargs)
+            SnapTimer(snap_interval=snap_interval, start=start)

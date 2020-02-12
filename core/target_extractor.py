@@ -149,6 +149,12 @@ class TargetExtractor:
             return None
         if released_data.isdigit() and len(released_data) == 4:
             return datetime.strptime(released_data, '%Y').date()
+        elif len(released_data.split(' ')) == 2:
+            try:
+                return datetime.strptime(released_data, '%b %Y').date()
+            except Exception as e:
+                print(f'[LOG       ]| <function: {self._get_released_date.__name__}> {e}')
+                return None
         return datetime.strptime(released_data, '%d %b, %Y').date()
 
     def _get_price(self):
@@ -198,5 +204,5 @@ class TargetExtractor:
         }
         return target_info
 
-    def get_info(self):
+    def get(self):
         return self.target_info
