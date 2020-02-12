@@ -1,6 +1,5 @@
 # built-in
 import ast
-import time
 import threading
 # submodule
 from scraping_tools.super_print import SuperPrint
@@ -8,18 +7,18 @@ from scraping_tools.progress_bar import ProgressBar
 from scraping_tools.snap_timer import SnapTimer
 # project
 from core.steam_api import SteamAPI
+from core.data_parser import DataParser
 from core.beautiful_soup_handler import BSoupHandler
-from core.steam_const import OS
 from core.target_extractor import TargetExtractor
 
 
 class SteamSpiderHandler:
 
-    def __init__(self, is_on_sale, platform, filepath, countrol_number):
+    def __init__(self, is_on_sale, platform, filepath, control_number):
         self.is_on_sale = is_on_sale
         self.platform = platform
         self.filepath = filepath
-        self.countrol_number = countrol_number
+        self.control_number = control_number
         self.info_container = dict()
 
         self.run()
@@ -66,8 +65,8 @@ class SteamSpiderHandler:
         amount_container = BSoupHandler.find_tag_by_key_value(
             soup=search_pagination, tag='div', key='class',
             value='search_pagination_left')
-        string = BSoupHandler.get_text(soup=amount_container)
-        result_amount = self._parse_targets_amount(string) if string else None
+        amount_string = BSoupHandler.get_text(soup=amount_container)
+        result_amount = DataParser.get_results_amount(amount_string) if amount_string else None
         SuperPrint(result_amount, 'result_amount')
         return result_amount
 
@@ -91,25 +90,26 @@ class SteamSpiderHandler:
     def _slice_pages(self, last_page_number):
         all_pages_sliced = list()
         temp = list()
+        pages = list()
         for page in range(1, last_page_number+1):
             temp.append(page)
-            if page % self.countrol_number == 0:
+            if page % self.control_number == 0:
                 pages = temp.copy()
                 all_pages_sliced.append(pages)
                 temp.clear()
-        all_pages_sliced.append(pages)
+        if pages:
+            all_pages_sliced.append(pages)
         return all_pages_sliced
 
-    @classmethod
-    def _exec(cls, page, is_on_sale, platform, filepath, info_container):
-        page_soup = cls._load_page(page, is_on_sale, platform)
-        targets = cls._get_results_by_page(page_soup)
+    def _exec(self, page):
+        page_soup = self._load_page(page, self.is_on_sale, self.platform)
+        targets = self._get_results_by_page(page_soup)
         for target in targets:
-            info = TargetExtractor(target, filepath).get_info()
+            info = TargetExtractor(target, self.filepath).get_info()
             if not info:
                 continue
             target_id = info.get('id')
-            info_container.update({target_id: info})
+            self.info_container.update({target_id: info})
 
     def run(self):
         first_page = 1
@@ -118,19 +118,12 @@ class SteamSpiderHandler:
         if pages_amount.isdigit():
             last_page_number = ast.literal_eval(pages_amount)
         else:
-            raise('Cannot find last page number')
+            raise(Exception('Cannot find last page number'))
         all_pages_sliced = self._slice_pages(last_page_number)
         for pages_sliced in all_pages_sliced:
             threads = list()
             for page in pages_sliced:
-                thr = threading.Thread(
-                    target=self._exec,
-                    args=(
-                        page,
-                        self.is_on_sale, self.platform,
-                        self.filepath, self.info_container
-                    )
-                )
+                thr = threading.Thread(target=self._exec, args=(page,))
                 thr.start()
                 threads.append(thr)
             for thr in threads:
@@ -138,7 +131,9 @@ class SteamSpiderHandler:
         result = self.info_container
         print(result)
 
-class SteamSpiderExcutor:
 
+class SteamSpiderExecutor:
+
+    @staticmethod
     def run(**kwargs):
         SteamSpiderHandler(**kwargs)

@@ -1,6 +1,7 @@
 # built-in
 import re
 
+
 class DataParser:
 
     BUNDLE_IMG_TOKEN_REGEX = re.compile(r'.*\/\d+\/(.*)\/capsule.*')

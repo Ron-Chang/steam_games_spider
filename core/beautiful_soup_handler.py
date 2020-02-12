@@ -1,6 +1,7 @@
 import os
 from bs4 import BeautifulSoup
 
+
 class BSoupHandler:
 
     @staticmethod
@@ -62,7 +63,9 @@ class BSoupHandler:
         def get_console_width():
             try:
                 return os.get_terminal_size(0)[0]
-            except:
+            except Exception as e:
+                print(e)
+                print('TERMINAL DETECT ERROR')
                 return 76
 
         def print_divider():

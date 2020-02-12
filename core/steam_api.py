@@ -1,8 +1,6 @@
 # built-in
 import time
 import requests
-# submodule
-from scraping_tools.super_print import SuperPrint
 # project
 from core.steam_const import OS, STEAM
 
@@ -30,7 +28,7 @@ class SteamAPI:
                 response.encoding = 'utf8'
                 break
             except Exception as e:
-                # print(f'[LOG       ]| <function: {cls._request_get_html.__name__}> {e}')
+                print(f'[LOG       ]| <function: {cls._request_get_html.__name__}> {e}')
                 error_count += 1
                 if error_count > 100:
                     return None
@@ -50,7 +48,7 @@ class SteamAPI:
                 response.encoding = 'utf8'
                 break
             except Exception as e:
-                # print(f'[LOG       ]| <function: {cls._request_get_stream.__name__}> {e}')
+                print(f'[LOG       ]| <function: {cls._request_get_stream.__name__}> {e}')
                 error_count += 1
                 if error_count > 100:
                     return None
@@ -72,9 +70,9 @@ class SteamAPI:
         """
         parameter = str()
         if platform and platform in [value for key, value in OS.__dict__.items() if not key.startswith('_')]:
-            parameter  = f'{parameter}&os={platform}'
+            parameter = f'{parameter}&os={platform}'
         if is_on_sale is True:
-            parameter  = f'{parameter}&specials=1'
+            parameter = f'{parameter}&specials=1'
         url = f'{STEAM.SEARCH_DOMAIN}/search/?page={page}{parameter}'
         # SuperPrint(url, target_name='url')
         return cls._request_get_html(url=url)
@@ -114,6 +112,3 @@ class SteamAPI:
         if not stream:
             return None
         return stream
-
-
-

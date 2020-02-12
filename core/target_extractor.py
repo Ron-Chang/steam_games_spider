@@ -5,6 +5,7 @@ from core.data_parser import DataParser
 from core.beautiful_soup_handler import BSoupHandler
 from core.image_handler import ImageHandler
 
+
 class TargetExtractor:
 
     def __init__(self, target_soup, filepath):
@@ -74,7 +75,7 @@ class TargetExtractor:
         platform_info = list()
         for platform_span in platform_span_list:
             platform = BSoupHandler.get_value_by_key(
-                soup=platform_span ,key_name='class')
+                soup=platform_span, key_name='class')
             if platform:
                 if len(platform) == 1:
                     platform_info.append(platform)
@@ -85,7 +86,10 @@ class TargetExtractor:
     def _get_review(self):
         """
          <div class="col search_reviewscore responsive_secondrow">
-            <span class="search_review_summary positive" data-tooltip-html="Mostly Positive&lt;br&gt;77% of the 638,504 user reviews for games in this bundle are positive.">
+            <span class=
+                    "search_review_summary positive"
+                data-tooltip-html=
+                    "Mostly Positive&lt;br&gt;77% of the 638,504 user reviews for games in this bundle are positive.">
             </span>
         </div>
         """
@@ -101,7 +105,7 @@ class TargetExtractor:
         review_container = BSoupHandler.get_value_by_key(
             soup=summary_container, key_name='class')
         if not review_container:
-            return  None
+            return None
         overall_reviews = review_container[1]
         review_string = BSoupHandler.get_value_by_key(
             soup=summary_container,
@@ -110,7 +114,7 @@ class TargetExtractor:
         review = {
             'overall_reviews': overall_reviews,
             'rate_of_positive': review_info['rate_of_positive'] if review_info else None,
-            'amount_of_reviews': review_info['amount_of_reviews']  if review_info else None,
+            'amount_of_reviews': review_info['amount_of_reviews'] if review_info else None,
         }
         return review
 
