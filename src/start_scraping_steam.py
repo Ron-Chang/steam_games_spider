@@ -7,7 +7,7 @@ if __name__ == '__main__':
     SETTING = {
         'is_on_sale': True,
         'platform': OS.MAC,
-        'filepath': 'img',
+        'filepath': 'static/steam_img',
         'control_number': 30
     }
 

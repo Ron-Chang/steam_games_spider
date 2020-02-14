@@ -57,7 +57,7 @@ services:
       - spider_network
     volumes:
       - ./src:/app:rw
-      - ~/spider_steam_image:/app/static:rw
+      - ~/spider_steam_image:/app/static/steam_img:rw
     env_file: dev.env
     tty: true
 
