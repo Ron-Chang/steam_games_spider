@@ -47,12 +47,12 @@ services:
 
   #### BEGIN SPIDER SEVERS ####
 
-  spider_steam:
+  steam_games_spider:
     build:
       context: .
       dockerfile: dockerfile
-    container_name: spider_steam
-    image: docker.ziliplay.com/spider_steam_dev:1.0
+    container_name: steam_games_spider
+    image: docker.ziliplay.com/steam_games_spider:1.0
     networks:
       - spider_network
     volumes:

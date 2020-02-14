@@ -22,6 +22,23 @@ class TargetExtractor:
             data-ds-itemkey="App_582010"
             data-ds-tagids="[1685,3859,19,1695,122,1697,21]"
             >
+
+            condition: data-ds-appid="215770,215772"
+
+            appid = target_id.split(',')
+
+            def _is_digit():
+                for appid in appid_list():
+                    if not appid.isdigit():
+                        return False
+                return True
+
+            if len(appid)>1 and cls._is_digit(appid):
+                return data-ds-packageid
+
+            data-ds-packageid="16492"  data-ds-itemkey="Sub_16492"
+            data-ds-packageid
+
         """
         app_id = BSoupHandler.get_value_by_key(
             soup=self.target_soup, key_name='data-ds-appid')

@@ -137,7 +137,7 @@ class SteamSpiderHandler:
                 thr.join(10)
         results = self.info_container
         # ################### TEST ####################
-        with open('export.txt', 'w') as fw:
+        with open('test/export.txt', 'w') as fw:
             fw.write('[\n')
             for result in results.values():
                 fw.write(f'{str(result)},\n')
