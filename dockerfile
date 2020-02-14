@@ -19,13 +19,13 @@ ENV ENV="/root/.bashrc"
 RUN mkdir -p /${PRODUCT_NAME}
 RUN mkdir -p /etc/supervisor.d/
 WORKDIR /${PRODUCT_NAME}
-# COPY src .
-# COPY requirements.txt .
-COPY . .
+COPY src .
+COPY requirements.txt .
 
 # Add alias
 RUN echo 'alias ll="ls -al"' >> /root/.profile
-RUN echo 'alias run="python main.py"' >> /root/.profile
+RUN echo 'alias run="python start_scraping_steam.py"' >> /root/.profile
+RUN echo 'alias test="python test.py"' >> /root/.profile
 
 # # Install apk
 RUN apk add --no-cache vim gcc g++ supervisor bash libffi-dev libressl-dev libxslt-dev
