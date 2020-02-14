@@ -1,3 +1,0 @@
-[submodule "scraping_tools"]
-	path = scraping_tools
-	url = git@github.com:Ron-Chang/scraping_tools.git
