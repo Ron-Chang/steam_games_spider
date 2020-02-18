@@ -2,12 +2,15 @@
 import ast
 import time
 import threading
+from datetime import datetime
 # submodule
 from scraping_tools.super_print import SuperPrint
 from scraping_tools.progress_bar import ProgressBar
 from scraping_tools.snap_timer import SnapTimer
 from scraping_tools.utils import CommonUtils
 # project
+from app import db, spider_rs
+from core.models import SteamGameInfo
 from core.steam_api import SteamAPI
 from core.data_parser import DataParser
 from core.beautiful_soup_handler import BSoupHandler
@@ -143,6 +146,28 @@ class SteamSpiderHandler:
                 fw.write(f'{str(result)},\n')
             fw.write('\n]')
         # ################### TEST ####################
+
+
+class InserData:
+
+    def update_database(**kwargs):
+        """
+            steam_id=1234567,
+            title='test',
+            discount=0.9,
+            normal_price=120,
+            overall_reviews='positive',
+            released_date=datetime.now().date(),
+            is_bundle=False,
+            is_support_win=True,
+            is_support_mac=False,
+            is_support_linux=False,
+            update_datetime=datetime.now(),
+            create_datetime=datetime.now(),
+        """
+        steam_game_info = SteamGameInfo(**kwargs)
+        db.session.add(steam_game_info)
+        db.session.commit()
 
 
 class SteamSpiderExecutor:

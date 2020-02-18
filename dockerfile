@@ -35,4 +35,4 @@ RUN apk add --no-cache jpeg-dev zlib-dev
 RUN pip --no-cache-dir install -r requirements.txt
 
 # # Startup service
-CMD ["supervisord", "-n"]
+# CMD ["supervisord", "-n"]
