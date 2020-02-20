@@ -25,10 +25,13 @@ class SteamSpiderHandler:
         self.filepath = filepath
         self.control_number = control_number
         self.info_container = dict()
-        self.count = int()
+        self.count = 0
         self.results_number = int()
 
         self.run()
+
+    def _add_count(self):
+        self.count += 1
 
     @staticmethod
     def _load_page(page, is_on_sale, platform):
@@ -110,7 +113,7 @@ class SteamSpiderHandler:
         targets = self._get_results_by_page(page_soup)
         for target in targets:
             info = TargetExtractor(target, self.filepath).get()
-            self.count += 1
+            self._add_count()
             ProgressBar(count=self.count, amount=self.results_number)
             if not info:
                 continue
