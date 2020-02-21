@@ -7,6 +7,11 @@ class STEAM:
     APPS_CONTAINER = "search_result_row ds_collapse_flag"
     label = "data-ds-appid"
 
+    OVERALL_REVIEW = {
+        'positive': 1,
+        'mixed': 0,
+        'negative': -1,
+    }
 
 class OS:
 

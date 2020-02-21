@@ -24,9 +24,8 @@ class SteamSpiderHandler:
         self.platform = platform
         self.filepath = filepath
         self.control_number = control_number
-        self.info_container = dict()
+        self.amount = int()
         self.count = 0
-        self.results_number = int()
 
         self.run()
 
@@ -91,34 +90,31 @@ class SteamSpiderHandler:
         pagination_list = BSoupHandler.find_all_tag(
             soup=search_pagination, tag_name='a')
         pagination_soup = pagination_list[-2] if pagination_list else None
-        page_amount = BSoupHandler.get_text(soup=pagination_soup)
-        return page_amount
+        return BSoupHandler.get_text(soup=pagination_soup)
 
-    def _slice_pages(self, last_page_number):
-        all_pages_sliced = list()
+    def _get_slice_page_container(self, page_amount):
+        slice_page_container = list()
         temp = list()
-        pages = list()
-        for page in range(1, last_page_number+1):
+        for page in range(1, page_amount+1):
             temp.append(page)
             if page % self.control_number == 0:
-                pages = temp.copy()
-                all_pages_sliced.append(pages)
+                slice_page_container.append(temp.copy())
                 temp.clear()
-        if pages:
-            all_pages_sliced.append(pages)
-        return all_pages_sliced
+        if temp:
+            slice_page_container.append(temp)
+        return slice_page_container
 
-    def _exec(self, page):
+    def _exec(self, page, result_container):
         page_soup = self._load_page(page, self.is_on_sale, self.platform)
         targets = self._get_results_by_page(page_soup)
         for target in targets:
             info = TargetExtractor(target, self.filepath).get()
             self._add_count()
-            ProgressBar(count=self.count, amount=self.results_number)
+            ProgressBar(count=self.count, amount=self.amount)
             if not info:
                 continue
             target_id = info.get('id')
-            self.info_container.update({target_id: info})
+            result_container.update({target_id: info})
 
     def run(self):
         first_page = 1
@@ -127,28 +123,26 @@ class SteamSpiderHandler:
         SuperPrint(pages_amount, '[INFO      ]| pages_amount')
         results_amount = self._get_search_results_amount(first_page_soup)
         if pages_amount.isdigit() and results_amount.isdigit():
-            last_page_number = ast.literal_eval(pages_amount)
-            self.results_number = ast.literal_eval(results_amount)
+            page_amount = ast.literal_eval(pages_amount)
+            self.amount = ast.literal_eval(results_amount)
         else:
             raise(Exception('Cannot find last page number'))
 
-        all_pages_sliced = self._slice_pages(last_page_number)
+        all_pages_sliced = self._get_slice_page_container(page_amount)
         for pages_sliced in all_pages_sliced:
             threads = list()
+            result_container = dict()
             for page in pages_sliced:
-                thr = threading.Thread(target=self._exec, args=(page,))
+                thr = threading.Thread(
+                    target=self._exec,
+                    args=(page, result_container))
                 thr.start()
                 threads.append(thr)
             for thr in threads:
                 thr.join(10)
-        results = self.info_container
-        # ################### TEST ####################
-        with open('test/export.txt', 'w') as fw:
-            fw.write('[\n')
-            for result in results.values():
-                fw.write(f'{str(result)},\n')
-            fw.write('\n]')
-        # ################### TEST ####################
+            for target_id, result in result_container.items():
+                # InserData.update_database(target_id, result)
+                SuperPrint(f'target_id:{target_id}, result:{result}')
 
 
 class InserData:

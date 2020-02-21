@@ -90,6 +90,8 @@ class SteamAPI:
         url = f'{STEAM.IMAGE_DOMAIN}/steam/apps/{target_id}/capsule_231x87.jpg'
         if is_bundle and token:
             url = f'{STEAM.IMAGE_DOMAIN}/steam/bundles/{target_id}/{token}/capsule_231x87.jpg'
+        if is_bundle:
+            url = f'{STEAM.IMAGE_DOMAIN}/steam/subs/{target_id}/capsule_231x87.jpg'
         stream = cls._request_get_stream(url=url)
         if not stream:
             return None
@@ -108,6 +110,8 @@ class SteamAPI:
         url = f'{STEAM.IMAGE_DOMAIN}/steam/apps/{target_id}/header.jpg'
         if is_bundle and token:
             url = f'{STEAM.IMAGE_DOMAIN}/steam/bundles/{target_id}/{token}/header.jpg'
+        if is_bundle:
+            url = f'{STEAM.IMAGE_DOMAIN}/subs/{target_id}/header_586x192.jpg'
         stream = cls._request_get_stream(url=url)
         if not stream:
             return None

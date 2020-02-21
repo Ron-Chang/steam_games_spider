@@ -4,6 +4,7 @@ from datetime import datetime
 from core.data_parser import DataParser
 from core.beautiful_soup_handler import BSoupHandler
 from core.image_handler import ImageHandler
+from scraping_tools.super_print import SuperPrint
 
 
 class TargetExtractor:
@@ -13,6 +14,14 @@ class TargetExtractor:
         self.filepath = filepath
 
         self.target_info = self._extract_target()
+
+    def _get_token(self):
+        capsule_container = BSoupHandler.find_tag(
+            soup=self.target_soup, tag_name='img')
+        capsule_url = BSoupHandler.get_value_by_key(
+            soup=capsule_container, key_name='src')
+        token = DataParser.get_bundle_img_token(capsule_url)
+        return token
 
     def _get_metadata(self):
         """
@@ -44,14 +53,13 @@ class TargetExtractor:
             soup=self.target_soup, key_name='data-ds-appid')
         bundle_id = BSoupHandler.get_value_by_key(
                 soup=self.target_soup, key_name='data-ds-bundleid')
-        if app_id:
-            return {'target_id': app_id, 'is_bundle': False, 'token': None}
+        package_id = BSoupHandler.get_value_by_key(
+                soup=self.target_soup, key_name='data-ds-packageid')
+        SuperPrint(f'app_id: {app_id} | bundle_id: {bundle_id} | package_id: {package_id}')
+        if package_id:
+            return {'target_id': package_id, 'is_bundle': True, 'token': None}
         if bundle_id:
-            capsule_container = BSoupHandler.find_tag(
-                soup=self.target_soup, tag_name='img')
-            capsule_url = BSoupHandler.get_value_by_key(
-                soup=capsule_container, key_name='src')
-            token = DataParser.get_bundle_img_token(capsule_url)
+            token = self._get_token()
             return {'target_id': bundle_id, 'is_bundle': True, 'token': token}
         return {'target_id': None, 'is_bundle': False, 'token': None}
 
