@@ -1,10 +1,12 @@
 # built-in
+import ast
 from datetime import datetime
 # project
 from core.data_parser import DataParser
 from core.beautiful_soup_handler import BSoupHandler
 from core.image_handler import ImageHandler
 from scraping_tools.super_print import SuperPrint
+from core.steam_const import OS, STEAM
 
 
 class TargetExtractor:
@@ -55,7 +57,7 @@ class TargetExtractor:
                 soup=self.target_soup, key_name='data-ds-bundleid')
         package_id = BSoupHandler.get_value_by_key(
                 soup=self.target_soup, key_name='data-ds-packageid')
-        SuperPrint(f'app_id: {app_id} | bundle_id: {bundle_id} | package_id: {package_id}')
+        # SuperPrint(f'app_id: {app_id} | bundle_id: {bundle_id} | package_id: {package_id}')
         if package_id:
             return {'target_id': package_id, 'is_bundle': True, 'token': None}
         if bundle_id:
@@ -73,7 +75,7 @@ class TargetExtractor:
             soup=self.target_soup, tag='span', key='class', value='title')
         return BSoupHandler.get_text(soup=title_container)
 
-    def _get_platform(self):
+    def _get_platforms(self):
         """
             <div class="col search_name ellipsis">
              <span class="title">
@@ -108,7 +110,14 @@ class TargetExtractor:
                     platform_info.append(platform[1])
         return platform_info
 
-    def _get_review(self):
+    @staticmethod
+    def _convert_decimal(rate):
+        text = rate.strip('-').strip('%')
+        if not text:
+            return None
+        return ast.literal_eval(text) * 0.01
+
+    def _get_reviews(self):
         """
          <div class="col search_reviewscore responsive_secondrow">
             <span class=
@@ -118,30 +127,31 @@ class TargetExtractor:
             </span>
         </div>
         """
+        reviews = dict()
         search_reviewscore_col = BSoupHandler.find_tag_by_key_value(
             soup=self.target_soup, tag='div', key='class',
             value='col search_reviewscore responsive_secondrow')
         if not search_reviewscore_col:
-            return None
+            return reviews
         summary_container = BSoupHandler.find_tag(
             soup=search_reviewscore_col, tag_name='span')
         if not summary_container:
-            return None
+            return reviews
         review_container = BSoupHandler.get_value_by_key(
             soup=summary_container, key_name='class')
         if not review_container:
-            return None
-        overall_reviews = review_container[1]
+            return reviews
+        overall_reviews = STEAM.OVERALL_REVIEW.get(review_container[1])
+        reviews.update({'overall_reviews': overall_reviews})
         review_string = BSoupHandler.get_value_by_key(
             soup=summary_container,
             key_name='data-tooltip-html')
         review_info = DataParser.get_users_review(input_string=review_string)
-        review = {
-            'overall_reviews': overall_reviews,
-            'rate_of_positive': review_info['rate_of_positive'] if review_info else None,
-            'amount_of_reviews': review_info['amount_of_reviews'] if review_info else None,
-        }
-        return review
+        rate = review_info.get('rate_of_positive')
+        reviews.update({'rate_of_positive': self._convert_decimal(rate) if rate else None})
+        amount_of_reviews = review_info.get('amount_of_reviews')
+        reviews.update({'amount_of_reviews': amount_of_reviews.replace(',', '')})
+        return reviews
 
     def _get_discount(self):
         """
@@ -159,7 +169,9 @@ class TargetExtractor:
             return None
         discount_span = BSoupHandler.find_tag(
             soup=discount_container, tag_name='span')
-        return BSoupHandler.get_text(soup=discount_span)
+        rate = BSoupHandler.get_text(soup=discount_span)
+        discount = self._convert_decimal(rate) if rate else None
+        return 1 - discount if discount else None
 
     def _get_released_date(self):
         """
@@ -206,7 +218,7 @@ class TargetExtractor:
             price_text = BSoupHandler.get_text(soup=price_span)
         else:
             price_text = None
-        return price_text.strip() if price_text else None
+        return price_text.strip().replace(',', '') if price_text else None
 
     def _extract_target(self):
         metadata = self._get_metadata()
@@ -217,15 +229,27 @@ class TargetExtractor:
         token = metadata.get('token')
         ImageHandler.download_image(
             target_id, is_bundle, token, self.filepath)
+
+        title = self._get_title()
+        platforms = self._get_platforms()
+        discount = self._get_discount()
+        price = self._get_price()
+        reviews = self._get_reviews()
+        released_date = self._get_released_date()
+
         target_info = {
-            'id': target_id,
-            'title': self._get_title(),
+            'steam_id': target_id,
+            'title': title,
             'is_bundle': is_bundle,
-            'platform': self._get_platform(),
-            'discount': self._get_discount(),
-            'normal_price': self._get_price(),
-            'released_date': self._get_released_date(),
-            'review': self._get_review()
+            'is_supported_win': True if OS.WINDOWS in platforms else False,
+            'is_supported_mac': True if OS.MAC in platforms else False,
+            'is_supported_linux': True if OS.LINUX in platforms else False,
+            'discount': discount,
+            'normal_price': price,
+            'released_date': released_date,
+            'overall_reviews': reviews.get('overall_reviews'),
+            'rate_of_positive': reviews.get('rate_of_positive'),
+            'amount_of_reviews': reviews.get('amount_of_reviews'),
         }
         return target_info
 

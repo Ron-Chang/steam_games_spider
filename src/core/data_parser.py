@@ -39,10 +39,11 @@ class DataParser:
         result = cls.USERS_REVIEW_REGEX.search(input_string)
         if not result:
             return None
-        review_info = {
+        review_info = dict()
+        review_info.update({
             'rate_of_positive': result.group(1),
             'amount_of_reviews': result.group(2)
-        }
+        })
         return review_info
 
 

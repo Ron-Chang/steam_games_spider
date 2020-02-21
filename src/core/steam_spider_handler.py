@@ -113,7 +113,7 @@ class SteamSpiderHandler:
             ProgressBar(count=self.count, amount=self.amount)
             if not info:
                 continue
-            target_id = info.get('id')
+            target_id = info.get('steam_id')
             result_container.update({target_id: info})
 
     def run(self):
@@ -141,9 +141,14 @@ class SteamSpiderHandler:
             for thr in threads:
                 thr.join(10)
             for target_id, result in result_container.items():
-                # InserData.update_database(target_id, result)
-                SuperPrint(f'target_id:{target_id}, result:{result}')
-
+                try:
+                    InserData.update_database(**result)
+                except Exception as e:
+                    SuperPrint(f'Error: {e}')
+                    SuperPrint(f'target_id: {target_id}')
+                    SuperPrint(f'result: {result}')
+                    continue
+            db.session.commit()
 
 class InserData:
 
@@ -153,19 +158,25 @@ class InserData:
             title='test',
             discount=0.9,
             normal_price=120,
-            overall_reviews='positive',
-            released_date=datetime.now().date(),
+            overall_reviews=1,
+            rate_of_positive=0.7,
+            amount_of_reviews=135,
+            released_date=None,
             is_bundle=False,
-            is_support_win=True,
-            is_support_mac=False,
-            is_support_linux=False,
+            is_supported_win=True,
+            is_supported_mac=False,
+            is_supported_linux=False,
             update_datetime=datetime.now(),
             create_datetime=datetime.now(),
         """
-        steam_game_info = SteamGameInfo(**kwargs)
-        db.session.add(steam_game_info)
-        db.session.commit()
-
+        steam_id = kwargs['steam_id']
+        steam_game_info = SteamGameInfo.query.filter_by(steam_id=steam_id).first()
+        if steam_game_info:
+            for key, value in kwargs.items():
+                setattr(steam_game_info, key, value)
+        else:
+            steam_game_info = SteamGameInfo(**kwargs)
+            db.session.add(steam_game_info)
 
 class SteamSpiderExecutor:
 
