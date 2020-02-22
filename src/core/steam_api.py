@@ -3,6 +3,7 @@ import time
 import requests
 # project
 from core.steam_const import OS, STEAM
+from scraping_tools.super_print import SuperPrint
 
 
 class SteamAPI:
@@ -14,15 +15,35 @@ class SteamAPI:
             'Chrome/79.0.3945.130 Safari/537.36'
         )
     }
+    default_cookies = {
+        'steamCountry': 'TW%7C2ef0bf866dda2e46575dc2f79e02ddea',
+        'browserid': '1279522993118976552',
+        'sessionid': 'afbe81ee2cb627316c788d6f',
+    }
+
+    @staticmethod
+    def _get_cookies(default_cookies):
+        """
+        US%7Cad893bc5f47afd72b4ba66a5deceb4ac
+        TW%7C2ef0bf866dda2e46575dc2f79e02ddea
+        """
+        DOMAIN = 'store.steampowered.com'
+        PATH = '/cookies'
+        cookies = requests.cookies.RequestsCookieJar()
+        for key, value in default_cookies.items():
+            cookies.set(key, value, domain=DOMAIN, path=PATH)
+        return cookies
 
     @classmethod
     def _request_get_html(cls, url, headers=None):
         if headers:
             cls.default_headers.update(headers)
+        cookies = cls._get_cookies(default_cookies=cls.default_cookies)
         error_count = 0
         while True:
             try:
-                response = requests.get(url, headers=cls.default_headers)
+                response = requests.get(
+                    url, headers=cls.default_headers, cookies=cookies)
                 if response.status_code != requests.codes.ok:
                     return None
                 response.encoding = 'utf8'

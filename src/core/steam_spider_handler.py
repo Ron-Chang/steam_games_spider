@@ -113,8 +113,7 @@ class SteamSpiderHandler:
             ProgressBar(count=self.count, amount=self.amount)
             if not info:
                 continue
-            target_id = info.get('steam_id')
-            result_container.update({target_id: info})
+            result_container.append(info)
 
     def run(self):
         first_page = 1
@@ -131,7 +130,7 @@ class SteamSpiderHandler:
         all_pages_sliced = self._get_slice_page_container(page_amount)
         for pages_sliced in all_pages_sliced:
             threads = list()
-            result_container = dict()
+            result_container = list()
             for page in pages_sliced:
                 thr = threading.Thread(
                     target=self._exec,
@@ -140,35 +139,21 @@ class SteamSpiderHandler:
                 threads.append(thr)
             for thr in threads:
                 thr.join(10)
-            for target_id, result in result_container.items():
+            for result in result_container:
+                steam_id = result.get('steam_id')
+                title = result.get('title')
+                SuperPrint(title, steam_id)
                 try:
                     InserData.update_database(**result)
                 except Exception as e:
-                    SuperPrint(f'Error: {e}')
-                    SuperPrint(f'target_id: {target_id}')
-                    SuperPrint(f'result: {result}')
+                    SuperPrint(f'Error: {e} | {result}')
                     continue
             db.session.commit()
+
 
 class InserData:
 
     def update_database(**kwargs):
-        """
-            steam_id=1234567,
-            title='test',
-            discount=0.9,
-            normal_price=120,
-            overall_reviews=1,
-            rate_of_positive=0.7,
-            amount_of_reviews=135,
-            released_date=None,
-            is_bundle=False,
-            is_supported_win=True,
-            is_supported_mac=False,
-            is_supported_linux=False,
-            update_datetime=datetime.now(),
-            create_datetime=datetime.now(),
-        """
         steam_id = kwargs['steam_id']
         steam_game_info = SteamGameInfo.query.filter_by(steam_id=steam_id).first()
         if steam_game_info:
@@ -178,6 +163,7 @@ class InserData:
             steam_game_info = SteamGameInfo(**kwargs)
             db.session.add(steam_game_info)
 
+
 class SteamSpiderExecutor:
 
     @staticmethod
@@ -186,4 +172,4 @@ class SteamSpiderExecutor:
         while True:
             start = time.time()
             SteamSpiderHandler(**kwargs)
-            SnapTimer(snap_interval=snap_interval, start=start)
+            SnapTimer(snap_interval=snap_interval, start=start, **kwargs)

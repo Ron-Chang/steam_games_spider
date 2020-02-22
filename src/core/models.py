@@ -2,7 +2,7 @@ from sqlalchemy import func, text
 from sqlalchemy.schema import UniqueConstraint
 from app import db
 
-# ====================== exsample ====================== #
+# ====================== An exsample ====================== #
 """
 class TableName(db.Model):
     __bind_key__ = 'database_name'
@@ -18,6 +18,8 @@ class TableName(db.Model):
     update_datetime = db.Column(db.DateTime)
     create_datetime = db.Column(db.DateTime, server_default=func.now())
 """
+# ====================== An exsample ====================== #
+
 
 class SteamGameInfo(db.Model):
     __bind_key__ = 'spider'
