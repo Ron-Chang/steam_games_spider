@@ -6,6 +6,7 @@ from core.data_parser import DataParser
 from core.beautiful_soup_handler import BSoupHandler
 from core.image_handler import ImageHandler
 from scraping_tools.super_print import SuperPrint
+from scraping_tools.log_stash import LogStash
 from core.steam_const import OS, STEAM
 
 
@@ -52,18 +53,17 @@ class TargetExtractor:
 
         """
         app_id = BSoupHandler.get_value_by_key(
-            soup=self.target_soup, key_name='data-ds-appid')
+            soup=self.target_soup, key_name=STEAM.LABEL.APP_ID)
         bundle_id = BSoupHandler.get_value_by_key(
-                soup=self.target_soup, key_name='data-ds-bundleid')
+                soup=self.target_soup, key_name=STEAM.LABEL.BUNDLE_ID)
         package_id = BSoupHandler.get_value_by_key(
-                soup=self.target_soup, key_name='data-ds-packageid')
-        # SuperPrint(f'app_id: {app_id} | bundle_id: {bundle_id} | package_id: {package_id}')
+                soup=self.target_soup, key_name=STEAM.LABEL.PACKAGE_ID)
         if package_id:
             return {'target_id': package_id, 'is_bundle': True, 'token': None}
         if bundle_id:
             token = self._get_token()
             return {'target_id': bundle_id, 'is_bundle': True, 'token': token}
-        return {'target_id': None, 'is_bundle': False, 'token': None}
+        return {'target_id': app_id, 'is_bundle': False, 'token': None}
 
     def _get_title(self):
         """
@@ -91,7 +91,7 @@ class TargetExtractor:
         """
         search_name_col = BSoupHandler.find_tag_by_key_value(
             soup=self.target_soup, tag='div', key='class',
-            value='col search_name ellipsis')
+            value=STEAM.LABEL.CONTAINER_OF_PLATFORM)
         if not search_name_col:
             return None
         span_list = BSoupHandler.find_all_tag(
@@ -115,7 +115,28 @@ class TargetExtractor:
         text = rate.strip('-').strip('%')
         if not text:
             return None
-        return ast.literal_eval(text) * 0.01
+        try:
+            number = ast.literal_eval(text)
+        except:
+            return None
+
+        if not isinstance(number, int):
+            return None
+        return round(number * 0.01, 2)
+
+    @staticmethod
+    def _convert_integer(num):
+        text = num.replace(',', '')
+        if not text:
+            return None
+        try:
+            number = ast.literal_eval(text)
+        except:
+            return None
+
+        if not isinstance(number, int):
+            return None
+        return number
 
     def _get_reviews(self):
         """
@@ -130,27 +151,27 @@ class TargetExtractor:
         reviews = dict()
         search_reviewscore_col = BSoupHandler.find_tag_by_key_value(
             soup=self.target_soup, tag='div', key='class',
-            value='col search_reviewscore responsive_secondrow')
+            value=STEAM.LABEL.CONTAINER_OF_REVIEW)
         if not search_reviewscore_col:
             return reviews
         summary_container = BSoupHandler.find_tag(
             soup=search_reviewscore_col, tag_name='span')
         if not summary_container:
             return reviews
-        review_container = BSoupHandler.get_value_by_key(
-            soup=summary_container, key_name='class')
-        if not review_container:
-            return reviews
-        overall_reviews = STEAM.OVERALL_REVIEW.get(review_container[1])
-        reviews.update({'overall_reviews': overall_reviews})
         review_string = BSoupHandler.get_value_by_key(
             soup=summary_container,
-            key_name='data-tooltip-html')
+            key_name=STEAM.LABEL.RESULTS_OF_REVIEW)
         review_info = DataParser.get_users_review(input_string=review_string)
+
         rate = review_info.get('rate_of_positive')
-        reviews.update({'rate_of_positive': self._convert_decimal(rate) if rate else None})
-        amount_of_reviews = review_info.get('amount_of_reviews')
-        reviews.update({'amount_of_reviews': amount_of_reviews.replace(',', '')})
+        rate_of_positive = self._convert_decimal(rate) if rate else None
+
+        amount = review_info.get('amount_of_reviews')
+        amount_of_reviews = self._convert_integer(amount) if amount else None
+        reviews.update({
+            'rate_of_positive': rate_of_positive,
+            'amount_of_reviews': amount_of_reviews
+        })
         return reviews
 
     def _get_discount(self):
@@ -178,21 +199,32 @@ class TargetExtractor:
         <div class="col search_released responsive_secondrow">
         13 Apr, 2015
         """
-        released_data_container = BSoupHandler.find_tag_by_key_value(
+        released_date_container = BSoupHandler.find_tag_by_key_value(
             soup=self.target_soup, tag='div', key='class',
             value='col search_released responsive_secondrow')
-        released_data = BSoupHandler.get_text(soup=released_data_container)
-        if not released_data:
+        released_date = BSoupHandler.get_text(soup=released_date_container)
+        if not released_date:
             return None
-        if released_data.isdigit() and len(released_data) == 4:
-            return datetime.strptime(released_data, '%Y').date()
-        elif len(released_data.split(' ')) == 2:
-            try:
-                return datetime.strptime(released_data, '%b %Y').date()
-            except Exception as e:
-                print(f'[LOG       ]| <function: {self._get_released_date.__name__}> {e}')
+        LogStash.debug(msg=f'released_date: {released_date}')
+        released_date_list = released_date.split(' ')
+        try:
+            if released_date_list == 3 and released_date_list[0].isdigit():
+                return datetime.strptime(released_date, '%d %b, %Y').date()
+            elif released_date_list == 3 and released_date_list[1].isdigit():
+                return datetime.strptime(released_date, '%b %d, %Y').date()
+            elif released_date_list == 2 and released_date_list[0].isdigit():
+                return datetime.strptime(released_date, '%Y %b').date()
+            elif released_date_list == 2 and released_date_list[1].isdigit():
+                return datetime.strptime(released_date, '%b %Y').date()
+            elif released_date_list == 1:
+                return datetime.strptime(released_date, '%Y').date()
+            else:
                 return None
-        return datetime.strptime(released_data, '%d %b, %Y').date()
+        except ValueError:
+            LogStash.info(msg=released_date)
+        except Exception as e:
+            LogStash.error(msg=f'{e}|{released_date}')
+
 
     def _get_price(self):
         """
@@ -224,6 +256,7 @@ class TargetExtractor:
         metadata = self._get_metadata()
         target_id = metadata.get('target_id')
         if not target_id:
+            LogStash.error(msg=f'metadata: {metadata}')
             return None
         is_bundle = metadata.get('is_bundle')
         token = metadata.get('token')
@@ -235,8 +268,12 @@ class TargetExtractor:
         discount = self._get_discount()
         price = self._get_price()
         reviews = self._get_reviews()
+        rate_of_positive = reviews.get('rate_of_positive')
+        amount_of_reviews = reviews.get('amount_of_reviews')
+        rank_of_review = None
+        if rate_of_positive and amount_of_reviews:
+            rank_of_review = STEAM.REVIEWS.get_rank(**reviews)
         released_date = self._get_released_date()
-
         target_info = {
             'steam_id': target_id,
             'title': title,
@@ -247,9 +284,9 @@ class TargetExtractor:
             'discount': discount,
             'normal_price': price,
             'released_date': released_date,
-            'overall_reviews': reviews.get('overall_reviews'),
-            'rate_of_positive': reviews.get('rate_of_positive'),
-            'amount_of_reviews': reviews.get('amount_of_reviews'),
+            'rank_of_review': rank_of_review,
+            'rate_of_positive': rate_of_positive,
+            'amount_of_reviews': amount_of_reviews,
         }
         return target_info
 

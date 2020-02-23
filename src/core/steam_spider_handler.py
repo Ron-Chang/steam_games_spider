@@ -12,6 +12,7 @@ from scraping_tools.utils import CommonUtils
 from app import db, spider_rs
 from core.models import SteamGameInfo
 from core.steam_api import SteamAPI
+from core.steam_const import STEAM
 from core.data_parser import DataParser
 from core.beautiful_soup_handler import BSoupHandler
 from core.target_extractor import TargetExtractor
@@ -19,18 +20,27 @@ from core.target_extractor import TargetExtractor
 
 class SteamSpiderHandler:
 
-    def __init__(self, is_on_sale, platform, filepath, control_number):
+    def __init__(self, is_on_sale, platform, filepath, slice_num):
         self.is_on_sale = is_on_sale
         self.platform = platform
         self.filepath = filepath
-        self.control_number = control_number
+        self.slice_num = slice_num
         self.amount = int()
         self.count = 0
+
+        self.insert_amount = 0
+        self.update_amount = 0
 
         self.run()
 
     def _add_count(self):
         self.count += 1
+
+    def _add_insert_amount(self):
+        self.insert_amount += 1
+
+    def _add_update_amount(self):
+        self.update_amount += 1
 
     @staticmethod
     def _load_page(page, is_on_sale, platform):
@@ -48,10 +58,10 @@ class SteamSpiderHandler:
         """
         search_result_container = BSoupHandler.find_tag_by_key_value(
             soup=page_soup, tag='div', key='id',
-            value='search_result_container')
+            value=STEAM.LABEL.CONTAINER_OF_SEARCH_RESULT)
         search_results = BSoupHandler.find_all_class(
             soup=search_result_container,
-            class_name='search_result_row ds_collapse_flag')
+            class_name=STEAM.LABEL.CONTAINER_OF_APPS)
         return search_results
 
     @staticmethod
@@ -61,7 +71,7 @@ class SteamSpiderHandler:
         """
         search_pagination = BSoupHandler.find_tag_by_key_value(
             soup=page_soup, tag='div', key='class',
-            value='search_pagination')
+            value=STEAM.LABEL.CONTAINER_OF_PAGINATION)
         return search_pagination
 
     def _get_search_results_amount(self, page_soup):
@@ -73,7 +83,7 @@ class SteamSpiderHandler:
         search_pagination = self._get_pagination_container(page_soup=page_soup)
         amount_container = BSoupHandler.find_tag_by_key_value(
             soup=search_pagination, tag='div', key='class',
-            value='search_pagination_left')
+            value=STEAM.LABEL.AMOUNT_OF_RESULTS)
         amount_string = BSoupHandler.get_text(soup=amount_container)
         return DataParser.get_results_amount(amount_string) if amount_string else None
 
@@ -97,12 +107,22 @@ class SteamSpiderHandler:
         temp = list()
         for page in range(1, page_amount+1):
             temp.append(page)
-            if page % self.control_number == 0:
+            if page % self.slice_num == 0:
                 slice_page_container.append(temp.copy())
                 temp.clear()
         if temp:
             slice_page_container.append(temp)
         return slice_page_container
+
+    def _updata_data(self, model, **kwargs):
+        self._add_update_amount()
+        for key, value in kwargs.items():
+            setattr(model, key, value)
+
+    def _insert_data(self, **kwargs):
+        self._add_insert_amount()
+        steam_game_info = SteamGameInfo(**kwargs)
+        db.session.add(steam_game_info)
 
     def _exec(self, page, result_container):
         page_soup = self._load_page(page, self.is_on_sale, self.platform)
@@ -119,7 +139,13 @@ class SteamSpiderHandler:
         first_page = 1
         first_page_soup = self._load_page(first_page, self.is_on_sale, self.platform)
         pages_amount = self._get_search_pages_amount(first_page_soup)
+
         SuperPrint(pages_amount, '[INFO      ]| pages_amount')
+        print(f'[INFO      ]| is_on_sale: {self.is_on_sale}')
+        print(f'[INFO      ]| platform: {self.platform}')
+        print(f'[INFO      ]| filepath: {self.filepath}')
+        print(f'[INFO      ]| slice_num: {self.slice_num}')
+
         results_amount = self._get_search_results_amount(first_page_soup)
         if pages_amount.isdigit() and results_amount.isdigit():
             page_amount = ast.literal_eval(pages_amount)
@@ -139,29 +165,27 @@ class SteamSpiderHandler:
                 threads.append(thr)
             for thr in threads:
                 thr.join(10)
+
             for result in result_container:
                 steam_id = result.get('steam_id')
                 title = result.get('title')
-                SuperPrint(title, steam_id)
+                # SuperPrint(title, steam_id)
+                game = SteamGameInfo.query.filter_by(steam_id=steam_id).first()
                 try:
-                    InserData.update_database(**result)
+                    if game:
+                        self._updata_data(game, **result)
+                    else:
+                        self._insert_data(**result)
+                    db.session.commit()
                 except Exception as e:
                     SuperPrint(f'Error: {e} | {result}')
                     continue
-            db.session.commit()
 
+    def get_update_amount(self):
+        return self.update_amount
 
-class InserData:
-
-    def update_database(**kwargs):
-        steam_id = kwargs['steam_id']
-        steam_game_info = SteamGameInfo.query.filter_by(steam_id=steam_id).first()
-        if steam_game_info:
-            for key, value in kwargs.items():
-                setattr(steam_game_info, key, value)
-        else:
-            steam_game_info = SteamGameInfo(**kwargs)
-            db.session.add(steam_game_info)
+    def get_insert_amount(self):
+        return self.insert_amount
 
 
 class SteamSpiderExecutor:
@@ -171,5 +195,9 @@ class SteamSpiderExecutor:
     def run(snap_interval, **kwargs):
         while True:
             start = time.time()
-            SteamSpiderHandler(**kwargs)
-            SnapTimer(snap_interval=snap_interval, start=start, **kwargs)
+            steam = SteamSpiderHandler(**kwargs)
+            extra_info = {
+                'update qty': steam.get_update_amount(),
+                'insert qty': steam.get_insert_amount()
+            }
+            SnapTimer(snap_interval=snap_interval, start=start, **extra_info)
