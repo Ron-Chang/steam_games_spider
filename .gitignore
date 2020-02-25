@@ -6,3 +6,4 @@ log/
 test/
 data/
 backup/
+test.*
