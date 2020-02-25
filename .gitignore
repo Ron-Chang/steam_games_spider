@@ -2,7 +2,7 @@ __pycache__
 .DS_Store
 .idea/
 db/
+log/
 test/
 data/
 backup/
-test.*
