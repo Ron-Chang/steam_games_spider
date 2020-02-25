@@ -1,13 +1,16 @@
 
 
 class OS:
+
     WINDOWS = 'win'
     MAC = 'mac'
     LINUX = 'linux'
 
 
 class STEAM:
+
     SEARCH_DOMAIN = 'https://store.steampowered.com'
+
     IMAGE_DOMAIN = 'https://steamcdn-a.akamaihd.net'
 
     class LABEL:

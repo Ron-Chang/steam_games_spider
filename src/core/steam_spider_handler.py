@@ -7,7 +7,7 @@ from datetime import datetime
 from scraping_tools.super_print import SuperPrint
 from scraping_tools.progress_bar import ProgressBar
 from scraping_tools.snap_timer import SnapTimer
-from scraping_tools.utils import CommonUtils
+from scraping_tools.utils import DecoratorUtils
 # project
 from app import db, spider_rs
 from core.models import SteamGameInfo
@@ -191,7 +191,7 @@ class SteamSpiderHandler:
 class SteamSpiderExecutor:
 
     @staticmethod
-    @CommonUtils.snap_interval(hours=36)
+    @DecoratorUtils.snap_interval(hours=36)
     def run(snap_interval, **kwargs):
         while True:
             start = time.time()

@@ -6,7 +6,7 @@ if __name__ == '__main__':
 
     SETTING = {
         'is_on_sale': False,
-        'platform': OS.LINUX,
+        'platform': None,
         'filepath': 'static/steam_img',
         'slice_num': 300
     }

@@ -63,7 +63,9 @@ class TargetExtractor:
         if bundle_id:
             token = self._get_token()
             return {'target_id': bundle_id, 'is_bundle': True, 'token': token}
-        return {'target_id': app_id, 'is_bundle': False, 'token': None}
+        if app_id:
+            return {'target_id': app_id, 'is_bundle': False, 'token': None}
+        return {'target_id': None, 'is_bundle': False, 'token': None}
 
     def _get_title(self):
         """
@@ -205,16 +207,23 @@ class TargetExtractor:
         released_date = BSoupHandler.get_text(soup=released_date_container)
         if not released_date:
             return None
-        LogStash.debug(msg=f'released_date: {released_date}')
         released_date_list = released_date.split(' ')
         try:
-            if released_date_list == 3 and released_date_list[0].isdigit():
+            if released_date_list == 3 and released_date_list[0].isdigit() and (released_date_list[1]) > 3:
+                return datetime.strptime(released_date, '%d %B, %Y').date()
+            if released_date_list == 3 and released_date_list[0].isdigit() and (released_date_list[1]) == 3:
                 return datetime.strptime(released_date, '%d %b, %Y').date()
-            elif released_date_list == 3 and released_date_list[1].isdigit():
+            elif released_date_list == 3 and released_date_list[1].isdigit() and (released_date_list[0]) > 3:
+                return datetime.strptime(released_date, '%B %d, %Y').date()
+            elif released_date_list == 3 and released_date_list[1].isdigit() and (released_date_list[0]) == 3:
                 return datetime.strptime(released_date, '%b %d, %Y').date()
-            elif released_date_list == 2 and released_date_list[0].isdigit():
+            elif released_date_list == 2 and released_date_list[0].isdigit() and (released_date_list[1]) > 3:
+                return datetime.strptime(released_date, '%Y %B').date()
+            elif released_date_list == 2 and released_date_list[0].isdigit() and (released_date_list[1]) == 3:
                 return datetime.strptime(released_date, '%Y %b').date()
-            elif released_date_list == 2 and released_date_list[1].isdigit():
+            elif released_date_list == 2 and released_date_list[1].isdigit() and (released_date_list[0]) > 3:
+                return datetime.strptime(released_date, '%B %Y').date()
+            elif released_date_list == 2 and released_date_list[1].isdigit() and (released_date_list[0]) == 3:
                 return datetime.strptime(released_date, '%b %Y').date()
             elif released_date_list == 1:
                 return datetime.strptime(released_date, '%Y').date()
@@ -224,7 +233,6 @@ class TargetExtractor:
             LogStash.info(msg=released_date)
         except Exception as e:
             LogStash.error(msg=f'{e}|{released_date}')
-
 
     def _get_price(self):
         """
