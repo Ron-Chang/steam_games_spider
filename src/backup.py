@@ -11,6 +11,6 @@ if __name__ == '__main__':
 
     now = datetime.now()
 
-    backup_dir = 'backup'
+    backup_dir = 'static/backup'
 
     BackupDatabase(models=models, now=now, backup_dir=backup_dir)
