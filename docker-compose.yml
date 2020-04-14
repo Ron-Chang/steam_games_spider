@@ -2,51 +2,6 @@ version: '3.5'
 
 services:
 
-  #### BEGIN REDIS SEVERS ####
-
-  spider_redis:
-    image: redis:5.0
-    networks:
-      - spider_network
-    command: "redis-server --appendonly yes"
-    volumes:
-      - ./db/redis/spider_data:/data
-    container_name: spider_redis
-
-  #### END REDIS SEVERS ####
-
-  #### BEGIN SQL SEVERS ####
-
-  spider_phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    networks:
-      - spider_network
-    environment:
-      - PMA_HOST=spider_mysql
-    links:
-      - "spider_mysql:spider_mysql"
-    ports:
-      - 8888:80
-    container_name: spider_phpmyadmin
-
-  spider_mysql:
-    image: mysql:5.6
-    networks:
-      - spider_network
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - TZ=Asia/Taipei
-    ports:
-      - 1209:3306
-    volumes:
-      - ./db/mysql/mysql_data:/var/lib/mysql
-    container_name: spider_mysql
-
-  #### BEGIN SQL SEVERS ####
-
-  #### BEGIN SPIDER SEVERS ####
-
   steam_games_spider:
     build:
       context: .
@@ -54,7 +9,7 @@ services:
     container_name: steam_games_spider
     image: docker.ziliplay.com/steam_games_spider:1.0
     networks:
-      - spider_network
+      - spider_steam_games_network
     volumes:
       - ./src:/app:rw
       - ~/Documents/spider:/app/static:rw
@@ -64,11 +19,6 @@ services:
   #### BEGIN SPIDER SEVERS ####
 
 networks:
-  spider_network:
-    name: spider_network
-    driver: bridge
-
-# networks:
-# spyder_fotmob_network:
-#   external:
-#     name: spider_network-credit
+  spider_steam_games_network:
+    external:
+      name: spider_network

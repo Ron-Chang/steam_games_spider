@@ -10,7 +10,7 @@ app.config.from_object(config)
 
 db = SQLAlchemy(app)
 
-from core.models import *
+from common.models import *
 
 spider_rs = redis.StrictRedis(
     host=config.SPIDER_REDIS_HOST,

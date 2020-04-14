@@ -4,13 +4,13 @@ import time
 import threading
 from datetime import datetime
 # submodule
+from common.models import SteamGameInfo
 from scraping_tools.super_print import SuperPrint
 from scraping_tools.progress_bar import ProgressBar
 from scraping_tools.snap_timer import SnapTimer
 from scraping_tools.utils import DecoratorUtils
 # project
 from app import db, spider_rs
-from core.models import SteamGameInfo
 from core.steam_api import SteamAPI
 from core.steam_const import STEAM
 from core.data_parser import DataParser
