@@ -197,7 +197,7 @@ class SteamSpiderExecutor:
             start = time.time()
             steam = SteamSpiderHandler(**kwargs)
             extra_info = {
-                'update qty': steam.get_update_amount(),
-                'insert qty': steam.get_insert_amount()
+                'upd. qty': steam.get_update_amount(),
+                'ins. qty': steam.get_insert_amount()
             }
             SnapTimer(snap_interval=snap_interval, start=start, **extra_info)

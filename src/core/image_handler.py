@@ -38,11 +38,14 @@ class ImageHandler:
     def download_image(cls, target_id, is_bundle, token, filepath):
         capsule = cls._get_capsule(target_id, is_bundle, token)
         header = cls._get_header(target_id, is_bundle, token)
+        apart_folder = str(sum(int(_) for _ in str(target_id)))
+        os.makedirs(os.path.join(filepath, apart_folder), exist_ok=True)
+
         if capsule:
             filename = cls._get_filename(target_id, is_bundle, 'capsule')
-            file_directory = os.path.join(filepath, filename)
+            file_directory = os.path.join(filepath, apart_folder, filename)
             capsule.save(file_directory)
         if header:
             filename = cls._get_filename(target_id, is_bundle, 'header')
-            file_directory = os.path.join(filepath, filename)
+            file_directory = os.path.join(filepath, apart_folder, filename)
             header.save(file_directory)
