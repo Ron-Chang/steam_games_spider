@@ -1,9 +1,13 @@
 __pycache__
 .DS_Store
 .idea/
+.dockerignore
 db/
 log/
 test/
 data/
 backup/
 test.*
+*.md
+!README*.md
+README-secret.md

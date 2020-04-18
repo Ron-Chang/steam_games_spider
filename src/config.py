@@ -21,6 +21,7 @@ class Config:
     }
 
     # for DBPacemaker - 透過定時排程請求DB，保持連線
+    DB_PACEMAKER_SWITCH = True if os.environ['ENVIRONMENT'] == 'develop' else False
     MODELS_PATH_LIST = ['common.models']
     POKE_DB_INTERVAL = 60 * 60
 

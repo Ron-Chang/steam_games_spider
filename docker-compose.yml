@@ -1,13 +1,12 @@
 version: '3.5'
 
 services:
-
   steam_games_spider:
     build:
       context: .
       dockerfile: dockerfile
     container_name: steam_games_spider
-    image: docker.ziliplay.com/steam_games_spider:1.0
+    image: ronhsienchang/steam_games_spider:latest
     networks:
       - spider_steam_games_network
     volumes:
