@@ -6,9 +6,9 @@ if __name__ == '__main__':
 
     SETTING = {
         'is_on_sale': True,
-        'platform': OS.LINUX,
+        'platform': OS.MAC,
         'filepath': 'static/steam_img',
-        'control_number': 100
+        'slice_num': 300
     }
 
     test = SteamSpiderExecutor.run(**SETTING)

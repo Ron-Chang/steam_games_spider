@@ -1,60 +1,70 @@
 
 
-class STEAM:
-    SEARCH_DOMAIN = 'https://store.steampowered.com'
-    IMAGE_DOMAIN = 'https://steamcdn-a.akamaihd.net'
-
-    APPS_CONTAINER = "search_result_row ds_collapse_flag"
-    label = "data-ds-appid"
-
-    OVERALL_REVIEW = {
-        'positive': 1,
-        'mixed': 0,
-        'negative': -1,
-    }
-
-    class REVIEWS:
-
-        RANK = {
-            'Overwhelmingly Positive': 4,
-            'Very Positive': 3,
-            'Positive': 2,
-            'Mostly Positive': 1,
-            'Mixed': 0,
-            'Mostly Negative': -1,
-            'Negative': -2,
-            'Very Negative': -3,
-            'Overwhelmingly Negative': -4,
-        }
-
-        @staticmethod
-        def get_overall_review(rate_of_positive, reviews_amount):
-            if rate_of_positive >= 95 and reviews_amount >= 500:
-                return 'Overwhelmingly Positive'
-            elif rate_of_positive >= 80 and 500 > reviews_amount >= 50:
-                return 'Very Positive'
-            elif rate_of_positive >= 80 and 50 > reviews_amount:
-                return 'Positive'
-            elif 80 > rate_of_positive >= 70:
-                return 'Mostly Positive'
-            elif 70 > rate_of_positive >= 40:
-                return 'Mixed'
-            elif 40 > rate_of_positive >= 20:
-                return 'Mostly Negative'
-            elif rate_of_positive > 20 and 50 > reviews_amount:
-                return 'Negative'
-            elif rate_of_positive > 20 and 500 > reviews_amount >= 50:
-                return 'Very Negative'
-            elif rate_of_positive > 20 and reviews_amount >= 500:
-                return 'Overwhelmingly Negative'
-
-        @classmethod
-        def get_rank(overall_review):
-            return cls.RANK.get(overall_review)
-
-
 class OS:
 
     WINDOWS = 'win'
     MAC = 'mac'
     LINUX = 'linux'
+
+
+class STEAM:
+
+    SEARCH_DOMAIN = 'https://store.steampowered.com'
+
+    IMAGE_DOMAIN = 'https://steamcdn-a.akamaihd.net'
+
+    class LABEL:
+
+        CONTAINER_OF_APPS = 'search_result_row ds_collapse_flag'
+        CONTAINER_OF_PAGINATION = 'search_pagination'
+        CONTAINER_OF_PLATFORM = 'col search_name ellipsis'
+        CONTAINER_OF_REVIEW = 'col search_reviewscore responsive_secondrow'
+        CONTAINER_OF_SEARCH_RESULT = 'search_result_container'
+
+        AMOUNT_OF_RESULTS = 'search_pagination_left'
+        RESULTS_OF_REVIEW = 'data-tooltip-html'
+
+        APP_ID = 'data-ds-appid'
+        BUNDLE_ID = 'data-ds-bundleid'
+        PACKAGE_ID = 'data-ds-packageid'
+
+    label = "data-ds-appid"
+
+    class REVIEWS:
+
+        RANK_INFO = {
+            '9': 'Overwhelmingly Positive',
+            '8': 'Very Positive',
+            '7': 'Positive',
+            '6': 'Mostly Positive',
+            '5': 'Mixed',
+            '4': 'Mostly Negative',
+            '3': 'Negative',
+            '2': 'Very Negative',
+            '1': 'Overwhelmingly Negative',
+        }
+
+        @staticmethod
+        def get_rank(rate_of_positive, amount_of_reviews):
+            if rate_of_positive >= 0.95 and amount_of_reviews >= 500:
+                return 9
+            elif rate_of_positive >= 0.8 and amount_of_reviews >= 50:
+                return 8
+            elif rate_of_positive >= 0.8 and 50 > amount_of_reviews:
+                return 7
+            elif 0.8 > rate_of_positive >= 0.7:
+                return 6
+            elif 0.7 > rate_of_positive >= 0.4:
+                return 5
+            elif 0.4 > rate_of_positive >= 0.2:
+                return 4
+            elif 0.2 > rate_of_positive and 50 > amount_of_reviews:
+                return 3
+            elif 0.2 > rate_of_positive and 500 > amount_of_reviews >= 50:
+                return 2
+            elif 0.2 > rate_of_positive and amount_of_reviews >= 500:
+                return 1
+
+        @classmethod
+        def get_rank_description(cls, rank):
+            return cls.RANK_INFO.get(str(rank))

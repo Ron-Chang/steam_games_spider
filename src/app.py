@@ -2,6 +2,7 @@ import redis
 from config import Config
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_dbpacemaker import DBPacemaker
 
 app = Flask(__name__)
 
@@ -10,7 +11,9 @@ app.config.from_object(config)
 
 db = SQLAlchemy(app)
 
-from core.models import *
+from common.models import *
+
+DBPacemaker.run(app, config=config, display=True)
 
 spider_rs = redis.StrictRedis(
     host=config.SPIDER_REDIS_HOST,
