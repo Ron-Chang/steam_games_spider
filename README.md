@@ -1,12 +1,10 @@
 ---
-title: ScoreMob API
+title: Steam Games Crawler
 ---
-{%hackmd theme-dark %}
-{%hackmd theme-vertical-writing %}
-###### tags: `spyder` `api` `flask` `python`
-# Steam Games Spider
+###### tags: `spider` `steam` `python`
+# Steam Games Crawler
 >Instruction:
->API Documentation: 
+>API Documentation:
 
 ## Outline
 [TOC]
